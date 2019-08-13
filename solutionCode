@@ -1,0 +1,48 @@
+
+    public static Set<String> validate(String input) {
+        int left = 0, right = 0;
+        Set<String> validExpressions = new HashSet<>();
+        // считаем кол-во непарных ‘{‘ и ‘}’
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == '{') {
+                left++;
+            } else if (input.charAt(i) == '}') {
+                // если нет соответствующей левой - записываем
+                right = left == 0 ? right + 1 : right;
+                // уменьшаем счетчик левых скобок, если данная правая была подходящей
+                left = left > 0 ? left - 1 : left;
+            }
+        }
+       // обработка исх. строки с известным количеством непарных скобок
+        recurse(input, 0, 0, 0, left, right, new StringBuilder(), validExpressions);
+        return validExpressions;
+    }
+
+private static void recurse( String s, int index, int leftCount, int rightCount, int leftRem, int rightRem,
+StringBuilder expression, Set<String> currentValidExpressions) {
+        // в конце строки перед добавлением проверяем исключенное кол-во скобок
+        if (index == s.length()) {
+            if (leftRem == 0 && rightRem == 0) {
+                currentValidExpressions.add(expression.toString());
+            }
+        } else {
+            char character = s.charAt(index);
+            int length = expression.length();
+            // случай исключения скобки
+            if ((character == '{' && leftRem > 0) || (character == '}' && rightRem > 0)) {
+                recurse( s,  index + 1, leftCount, rightCount, leftRem - (character == '{' ? 1 : 0), rightRem - (character == '}' ? 1 : 0), expression, currentValidExpressions);
+            }
+            expression.append(character);
+            // пропускаем другой символ
+            if (character != '{' && character != '}') {
+                recurse(s, index + 1, leftCount, rightCount, leftRem, rightRem, expression,currentValidExpressions);
+            } else if (character == '{') {
+                recurse(s, index + 1, leftCount + 1, rightCount, leftRem, rightRem, expression, currentValidExpressions);
+            } else if (rightCount < leftCount) {
+                // ‘}’
+                recurse(s, index + 1, leftCount, rightCount + 1, leftRem, rightRem, expression, currentValidExpressions);
+            }
+            expression.deleteCharAt(length);
+        }
+    }
+
